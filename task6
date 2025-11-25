@@ -1,0 +1,80 @@
+CREATE TABLE authors (
+    author_id INTEGER PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE books (
+    book_id INTEGER PRIMARY KEY,
+    title VARCHAR(200),
+    author_id INTEGER,
+    price DECIMAL(10,2),
+    FOREIGN KEY (author_id) REFERENCES authors(author_id)
+);
+
+CREATE TABLE issued_books (
+    issue_id INTEGER PRIMARY KEY,
+    book_id INTEGER,
+    student_name VARCHAR(100),
+    issue_date DATE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id)
+);
+
+INSERT INTO authors VALUES
+(1, 'APJ Abdul Kalam'),
+(2, 'Chetan Bhagat'),
+(3, 'Sudha Murty');
+
+INSERT INTO books VALUES
+(1, 'Wings of Fire', 1, 450),
+(2, 'Half Girlfriend', 2, 300),
+(3, 'Wise & Otherwise', 3, 350),
+(4, 'Grandma’s Bag of Stories', 3, 200);
+
+INSERT INTO issued_books VALUES
+(1, 1, 'Rahul', '2025-01-10'),
+(2, 3, 'Sneha', '2025-01-12');
+
+SELECT title, price
+FROM books
+WHERE price > (SELECT AVG(price) FROM books);
+
+SELECT name
+FROM authors
+WHERE author_id IN (
+    SELECT author_id FROM books
+    WHERE book_id IN (SELECT book_id FROM issued_books)
+);
+
+SELECT student_name
+FROM issued_books
+WHERE book_id IN (
+    SELECT book_id FROM books WHERE price > 300
+);
+
+SELECT title,
+       price,
+       (SELECT name FROM authors WHERE authors.author_id = books.author_id) AS author_name
+FROM books
+WHERE price = (SELECT MAX(price) FROM books);
+
+SELECT title
+FROM books b
+WHERE NOT EXISTS (
+    SELECT 1 FROM issued_books i WHERE i.book_id = b.book_id
+);
+
+SELECT title, author_id, price
+FROM books b1
+WHERE price = (
+    SELECT MAX(price)
+    FROM books b2
+    WHERE b2.author_id = b1.author_id
+);
+
+SELECT author_id, avg_price
+FROM (
+    SELECT author_id, AVG(price) AS avg_price
+    FROM books
+    GROUP BY author_id
+) AS t
+WHERE avg_price > 300;
